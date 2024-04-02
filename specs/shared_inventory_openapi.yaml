@@ -1,0 +1,290 @@
+openapi: 3.0.0
+info:
+  title: Common Inventory API
+  description: Common Inventory
+  version: 1.0.0
+
+servers:
+  - url: https://console.redhat.com
+
+paths:
+  /resources:
+    description: Base path for common inventory
+    get:
+      summary: List all resources
+      operationId: listAllResources
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: A paged array of heterogenous inventory resources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeterogeneousResourceList"
+  /resources/{resourceId}:
+    description: Base path for common inventory
+    parameters:
+      - name: resourceId
+        in: path
+        schema:
+          type: string
+        required: true
+    get:
+      summary: Get single resource
+      operationId: getSingleResource
+      responses:
+        200:
+          description: Return matching resource
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/k8sCluster"
+                  - $ref: "#/components/schemas/linuxHost"
+    delete:
+      summary: Delete the resource matching the given ID
+      operationId: deleteSingleResource
+      responses:
+        200:
+          description: Return matching resource
+
+  /k8sclusters:
+    description: k8s cluster specific
+    get:
+      summary: List all cluster resources
+      operationId: listAllClusters
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: A paged array of kubernetes clusters
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/k8sClusterList"
+    delete:
+      description: ""
+      parameters: []
+      responses:
+        "200":
+          description: OK
+    post:
+      description: ""
+      requestBody:
+        description: "The cluster to register"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/k8sCluster"
+      responses:
+        "200":
+          description: OK
+  /k8sclusters/{resourceId}:
+    description: B
+    parameters:
+      - name: resourceId
+        in: path
+        schema:
+          type: string
+        required: true
+    get:
+      summary: Get single cluster
+      operationId: getSingleCluster
+      responses:
+        200:
+          description: Return matching resource
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/k8sCluster"
+
+  /linux-hosts:
+    description: k8s cluster specific
+    get:
+      summary: List all linux resources
+      operationId: listAllLinuxHosts
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+      responses:
+        200:
+          description: A paged array of heterogenous inventory resources
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/linuxHostList"
+    delete:
+      description: ""
+      parameters: []
+      responses:
+        "200":
+          description: OK
+    post:
+      description: ""
+      requestBody:
+        description: "The host to register"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/linuxHost"
+      responses:
+        "200":
+          description: OK
+
+components:
+  schemas:
+    CommonAttributes:
+      type: object
+      description: Attributes shared by all items in inventory
+      required:
+        - Id
+        - DisplayName
+      properties:
+        Id:
+          type: string
+          description: The identifier for this resource in inventory.
+        Href:
+          type: string
+          format: uri
+          description: An identifier
+        Displayname:
+          type: string
+          description: An human readable name for the inventory item
+        CreatedAt:
+          type: string
+          format: date-time
+          description: Date and time when the inventory item was first created
+        LastUpdatedAt:
+          type: string
+          format: date-time
+          description: Date and time when the inventory item was last updated
+        Reporter:
+          type: string
+          description: The entity that registered this item in the inventory (provenance)
+      discriminator:
+        propertyName: ResourceType
+
+    k8sCluster:
+      allOf:
+        - $ref: "#/components/schemas/CommonAttributes"
+        - type: object
+          description: Definition of k8s cluster resource  type
+          required:
+            - ResourceType
+          properties:
+            ResourceType:
+              description: The type of the inventory resource
+              type: string
+              enum: [k8sCluster]
+            ClusterId:
+              type: string
+              description: A*****
+            ExternalClusterId:
+              type: string
+              description: A****
+            CloudProviderId:
+              type: string
+              description: A****
+            ConsoleUrl:
+              type: string
+              description: A****
+    linuxHost:
+      allOf:
+        - $ref: "#/components/schemas/CommonAttributes"
+        - type: object
+          description: Definition of a linux host resource type
+          required:
+            - ResourceType
+          properties:
+            ResourceType:
+              description: The type of the inventory resource
+              type: string
+              enum: [linuxHost]
+            BiosUuid:
+              type: string
+              description: A****
+            Fqdn:
+              type: string
+              description: A****
+            InsightsId:
+              type: string
+              description: A****
+            ProviderId:
+              type: string
+              description: A****
+            ProviderType:
+              type: string
+              description: A****
+            SatelliteId:
+              type: string
+              description: A****
+            SubscriptionManagerId:
+              type: string
+              description: A****
+
+    PagedResponseMetadata:
+      properties:
+        page:
+          description:
+            Index of the requested page, where one corresponds to the first
+            page.
+          type: integer
+          format: int32
+        size:
+          description: Number of items contained in the returned page.
+          type: integer
+          format: int32
+        total:
+          description: Total number of items of the collection.
+          type: integer
+          format: int32
+    HeterogeneousResourceList:
+      allOf:
+        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of mixed type inventory items.
+              type: array
+              items:
+                anyOf:
+                  - $ref: "#/components/schemas/k8sCluster"
+                  - $ref: "#/components/schemas/linuxHost"
+    k8sClusterList:
+      allOf:
+        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of k8s resources.
+              type: array
+              items:
+                $ref: "#/components/schemas/k8sCluster"
+    linuxHostList:
+      allOf:
+        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of Linux host resources.
+              type: array
+              items:
+                $ref: "#/components/schemas/linuxHost"
