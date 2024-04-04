@@ -8,7 +8,7 @@ servers:
   - url: https://console.redhat.com
 
 paths:
-  /resources:
+  /api/inventory/v1.0/resources:
     description: Base path for common inventory
     get:
       summary: List all resources
@@ -28,7 +28,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HeterogeneousResourceList"
-  /resources/{resourceId}:
+  /api/inventory/v1.0/resources/{resourceId}:
     description: Base path for common inventory
     parameters:
       - name: resourceId
@@ -55,7 +55,7 @@ paths:
         200:
           description: Return matching resource
 
-  /k8sclusters:
+  /api/inventory/v1.0/k8sclusters:
     description: k8s cluster specific
     get:
       summary: List all cluster resources
@@ -92,7 +92,7 @@ paths:
       responses:
         "200":
           description: OK
-  /k8sclusters/{resourceId}:
+  /api/inventory/v1.0/k8sclusters/{resourceId}:
     description: B
     parameters:
       - name: resourceId
@@ -111,7 +111,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/k8sCluster"
 
-  /linux-hosts:
+  /api/inventory/v1.0/linux-hosts:
     description: k8s cluster specific
     get:
       summary: List all linux resources
@@ -155,7 +155,6 @@ components:
       type: object
       description: Attributes shared by all items in inventory
       required:
-        - Id
         - DisplayName
       properties:
         Id:
@@ -179,6 +178,13 @@ components:
         Reporter:
           type: string
           description: The entity that registered this item in the inventory (provenance)
+        Tags:
+          description: |-
+            Map of string keys and string values that can be used to organize and categorize
+            (scope and select) resources
+          type: object
+          additionalProperties:
+            type: string
       discriminator:
         propertyName: ResourceType
 
