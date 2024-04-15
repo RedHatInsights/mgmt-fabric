@@ -151,6 +151,16 @@ paths:
 
 components:
   schemas:
+    ResourceTag:
+      type: object
+      description: An abitrary namespaced key value pair
+      properties:
+        namespace:
+          type: string
+        key:
+          type: string
+        value:
+          type: string
     CommonAttributes:
       type: object
       description: Attributes shared by all items in inventory
@@ -182,9 +192,9 @@ components:
           description: |-
             Map of string keys and string values that can be used to organize and categorize
             (scope and select) resources
-          type: object
-          additionalProperties:
-            type: string
+          type: array
+          items:
+            $ref: "#/components/schemas/ResourceTag"
       discriminator:
         propertyName: ResourceType
 
@@ -200,18 +210,7 @@ components:
               description: The type of the inventory resource
               type: string
               enum: [k8sCluster]
-            ClusterId:
-              type: string
-              description: A*****
-            ExternalClusterId:
-              type: string
-              description: A****
-            CloudProviderId:
-              type: string
-              description: A****
-            ConsoleUrl:
-              type: string
-              description: A****
+
     linuxHost:
       allOf:
         - $ref: "#/components/schemas/CommonAttributes"
@@ -226,25 +225,25 @@ components:
               enum: [linuxHost]
             BiosUuid:
               type: string
-              description: A****
+              description: The BIOS id for this host
             Fqdn:
               type: string
-              description: A****
+              description: The fully qualified domain name for this host
             InsightsId:
               type: string
-              description: A****
+              description: The (optional) Insights ID for this host
             ProviderId:
               type: string
-              description: A****
+              description: The ID of the environment running this hsot
             ProviderType:
               type: string
-              description: A****
+              description: The type of environmet running this host
             SatelliteId:
               type: string
-              description: A****
+              description: The (optional) Satellite ID of the Satellite server managing this host
             SubscriptionManagerId:
               type: string
-              description: A****
+              description: The subscription manager identity assigned to this host.
 
     PagedResponseMetadata:
       properties:
