@@ -185,9 +185,29 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated
-        Reporter:
-          type: string
-          description: The entity that registered this item in the inventory (provenance)
+        Reporters:
+          type: array
+          description: The entities that registered this item in the inventory (provenance). The same resource may be registered by multiple reporters
+          items:
+            type: object
+            properties:
+              Name:
+                type: string
+              Href:
+                type: string
+                format: uri
+                description: "Reporter specific link to resource"
+              ResourceId:
+                type: string
+                description: "The ID assigned to this resource by the reporter"
+        CredentialRef:
+          type: object
+          properties:
+            Reference:
+              type: string
+            Type:
+              type: string
+              enum: ["url", "ssh_key_id", "name"]
         Tags:
           description: |-
             Map of string keys and string values that can be used to organize and categorize
