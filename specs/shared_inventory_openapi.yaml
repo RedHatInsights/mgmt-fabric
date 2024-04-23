@@ -75,12 +75,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/k8sClusterList"
-    delete:
-      description: ""
-      parameters: []
-      responses:
-        "200":
-          description: OK
     post:
       description: ""
       requestBody:
@@ -100,6 +94,7 @@ paths:
         schema:
           type: string
         required: true
+        description: The resource Id can be the id assigned, or any alias in the form "hcrn:reporter.name:reporter.id"
     get:
       summary: Get single cluster
       operationId: getSingleCluster
@@ -110,6 +105,23 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/k8sCluster"
+    delete:
+      description: ""
+      responses:
+        "200":
+          description: OK
+    patch:
+      description: ""
+      parameters: []
+      requestBody:
+        description: "The "
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/k8sCluster"
+      responses:
+        "200":
+          description: OK
 
   /api/inventory/v1.0/linux-hosts:
     description: k8s cluster specific
@@ -131,16 +143,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/linuxHostList"
+    post:
+      description: ""
+      requestBody:
+        description: "The host to register"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/linuxHost"
+      responses:
+        "200":
+          description: OK
+  /api/inventory/v1.0/linux-hosts/{resourceId}:
+    parameters:
+      - name: resourceId
+        in: path
+        schema:
+          type: string
+        required: true
+        description: The resource Id can be the id assigned, or any alias in the form "hcrn:reporter.name:reporter.id"
+    get:
+      description: ""
+      parameters: []
+      responses:
+        "200":
+          description: OK
     delete:
       description: ""
       parameters: []
       responses:
         "200":
           description: OK
-    post:
+    patch:
       description: ""
       requestBody:
-        description: "The host to register"
+        description: "The "
         content:
           application/json:
             schema:
@@ -185,6 +222,9 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated
+        Location:
+          type: string
+          description: The geo-location where the resource lives
         Reporters:
           type: array
           description: The entities that registered this item in the inventory (provenance). The same resource may be registered by multiple reporters
@@ -199,7 +239,7 @@ components:
                 description: "Reporter specific link to resource"
               ResourceId:
                 type: string
-                description: "The ID assigned to this resource by the reporter"
+                description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
         CredentialRef:
           type: object
           properties:
@@ -207,7 +247,7 @@ components:
               type: string
             Type:
               type: string
-              enum: ["url", "ssh_key_id", "name"]
+              enum: ["url", "ssh_key_identifier"]
         Tags:
           description: |-
             Map of string keys and string values that can be used to organize and categorize
@@ -230,6 +270,15 @@ components:
               description: The type of the inventory resource
               type: string
               enum: [k8sCluster]
+            ExternalClusterId:
+              type: string
+              description: The OCP cluster ID
+            CloudProviderId:
+              type: string
+              description: The ID of the cloud provider where this cluster is installed
+            ApiServerUrl:
+              type: string
+              description: The URL to access the cluster API server
 
     linuxHost:
       allOf:
