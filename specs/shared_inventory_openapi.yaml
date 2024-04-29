@@ -45,9 +45,8 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: "#/components/schemas/k8sCluster"
-                  - $ref: "#/components/schemas/linuxHost"
+                $ref: "#/components/schemas/CommonAttributes"
+
     delete:
       summary: Delete the resource matching the given ID
       operationId: deleteSingleResource
@@ -94,7 +93,7 @@ paths:
         schema:
           type: string
         required: true
-        description: The resource Id can be the id assigned, or any alias in the form "hcrn:reporter.name:reporter.id"
+        description: The resource ID assigned to the resource by the inventory.
     get:
       summary: Get single cluster
       operationId: getSingleCluster
@@ -138,7 +137,7 @@ paths:
             format: int32
       responses:
         200:
-          description: A paged array of heterogenous inventory resources
+          description: A paged array linux host inventory resources
           content:
             application/json:
               schema:
@@ -161,7 +160,8 @@ paths:
         schema:
           type: string
         required: true
-        description: The resource Id can be the id assigned, or any alias in the form "hcrn:reporter.name:reporter.id"
+        description: |-
+          The resource ID assigned to the resource by the inventory
     get:
       description: ""
       parameters: []
@@ -198,19 +198,41 @@ components:
           type: string
         value:
           type: string
+    ReporterData:
+      type: object
+      properties:
+        ConsoleHref:
+          type: string
+          format: uri
+          description: |-
+            The URL for this resource in the reporter's management UI console. For example
+            this would be the cluster URL in the HCC Console for an OCM reported cluster
+        ApiHref:
+          type: string
+          format: uri
+          description: "Reporter specific link to resource"
+        ResourceIdAlias:
+          type: string
+          description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
     CommonAttributes:
       type: object
       description: Attributes shared by all items in inventory
       required:
         - DisplayName
+      allOf:
+        - $ref: "#/components/schemas/ReporterData"
+          writeOnly: true
+          description: |-
+            This data is write only and unique to a reporter
       properties:
         Id:
           type: string
+          readOnly: true
           description: The identifier for this resource in inventory.
         Href:
           type: string
           format: uri
-          description: An identifier
+          description: The REST self reference for the inventory item.
         Displayname:
           type: string
           description: An human readable name for the inventory item
@@ -222,32 +244,36 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated
-        Location:
-          type: string
-          description: The geo-location where the resource lives
         Reporters:
           type: array
+          readOnly: true
           description: The entities that registered this item in the inventory (provenance). The same resource may be registered by multiple reporters
           items:
             type: object
             properties:
-              Name:
+              Type:
                 type: string
-              Href:
+                description: |-
+                  The reporter type, for example,  Satellite, ACM, OCM
+                  The reporter type is authenticated during resource registration/update.
+              ReporterInstanceId:
                 type: string
-                format: uri
-                description: "Reporter specific link to resource"
-              ResourceId:
+                description: |-
+                  The identifier unique to the reporter instance. This is meant to uniquely
+                  identify reporters that can have multiple instances running, such as ACM.
+                  The instance ID is authenticated during resource registration/update.
+              CreatedAt:
                 type: string
-                description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
-        CredentialRef:
-          type: object
-          properties:
-            Reference:
-              type: string
-            Type:
-              type: string
-              enum: ["url", "ssh_key_identifier"]
+                format: date-time
+                description: The time when the is reporter record was created
+              LastUpdatedAt:
+                type: string
+                format: date-time
+                description: The time when this reporter record was updated
+          allOf:
+            - $ref: "#/components/schemas/ReporterData"
+              description: The resource data that was registered by this reporter instance
+
         Tags:
           description: |-
             Map of string keys and string values that can be used to organize and categorize
@@ -276,9 +302,31 @@ components:
             CloudProviderId:
               type: string
               description: The ID of the cloud provider where this cluster is installed
-            ApiServerUrl:
-              type: string
-              description: The URL to access the cluster API server
+            ClusterAccess:
+              type: object
+              properties:
+                ApiServerUrl:
+                  type: string
+                  description: The URL to access the cluster API server
+                CredentialRef:
+                  type: object
+                  description: |-
+                    The URL to get access credentials for this resource. For example this could be a reference to OCM
+                    (https://api.openshift.com/#/default/get_api_clusters_mgmt_v1_clusters__cluster_id__credentials)
+                    or  ARO RP
+                    https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RedHatOpenShift/openShiftClusters/{resourceName}/listAdminCredentials?api-version=2023-09-04
+                    It is the responsibility of the user to configure appropriate authentication for calling these APIs.
+                  properties:
+                    Reference:
+                      type: string
+                      format: uri
+                    RefType:
+                      description: The type of this credential URL
+                      type: string
+                      enum:
+                        - OCM
+                        - ARO-RP
+                        - ACM
 
     linuxHost:
       allOf:
@@ -313,6 +361,18 @@ components:
             SubscriptionManagerId:
               type: string
               description: The subscription manager identity assigned to this host.
+            HostAccess:
+              type: object
+              properties:
+                CredentialRef:
+                  type: object
+                  description: The credential hint/key to get access credentials for this resource.
+                  properties:
+                    Reference:
+                      type: string
+                    Type:
+                      type: string
+                      enum: ["vault_url", "ssh_key_identifier"]
 
     PagedResponseMetadata:
       properties:
@@ -339,9 +399,7 @@ components:
               description: Retrieved list of mixed type inventory items.
               type: array
               items:
-                anyOf:
-                  - $ref: "#/components/schemas/k8sCluster"
-                  - $ref: "#/components/schemas/linuxHost"
+                $ref: "#/components/schemas/CommonAttributes"
     k8sClusterList:
       allOf:
         - $ref: "#/components/schemas/PagedResponseMetadata"
