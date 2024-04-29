@@ -23,11 +23,11 @@ paths:
             format: int32
       responses:
         200:
-          description: A paged array of heterogenous inventory resources
+          description: A paged array of heterogenous inventory resources. Only common attributes will be returned.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HeterogeneousResourceList"
+                $ref: "#/components/schemas/CommonAttributes"
   /api/inventory/v1.0/resources/{resourceId}:
     description: Base path for common inventory
     parameters:
@@ -36,6 +36,10 @@ paths:
         schema:
           type: string
         required: true
+        description: |-
+          The resource ID assigned to the resource by the inventory.
+          A reporter alias may also be used as a resource ID using the format:
+          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
       summary: Get single resource
       operationId: getSingleResource
@@ -69,7 +73,7 @@ paths:
             format: int32
       responses:
         200:
-          description: A paged array of kubernetes clusters
+          description: A paged list of kubernetes clusters registered in the current inventory.
           content:
             application/json:
               schema:
@@ -93,7 +97,10 @@ paths:
         schema:
           type: string
         required: true
-        description: The resource ID assigned to the resource by the inventory.
+        description: |-
+          The resource ID assigned to the resource by the inventory.
+           A reporter alias may also be used as a resource ID using the format:
+          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
       summary: Get single cluster
       operationId: getSingleCluster
@@ -162,6 +169,8 @@ paths:
         required: true
         description: |-
           The resource ID assigned to the resource by the inventory
+          A reporter alias may also be used as a resource ID using the format:
+          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
       description: ""
       parameters: []
@@ -206,11 +215,11 @@ components:
           format: uri
           description: |-
             The URL for this resource in the reporter's management UI console. For example
-            this would be the cluster URL in the HCC Console for an OCM reported cluster
+            this would be the cluster URL in the HCC Console for an OCM reported cluster.
         ApiHref:
           type: string
           format: uri
-          description: "Reporter specific link to resource"
+          description: "Reporter specific API  link to the resource."
         ResourceIdAlias:
           type: string
           description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
@@ -223,7 +232,7 @@ components:
         - $ref: "#/components/schemas/ReporterData"
           writeOnly: true
           description: |-
-            This data is write only and unique to a reporter
+            This data is write only and unique to a reporter.
       properties:
         Id:
           type: string
@@ -235,15 +244,20 @@ components:
           description: The REST self reference for the inventory item.
         Displayname:
           type: string
-          description: An human readable name for the inventory item
+          description: An human readable name for the inventory item.
         CreatedAt:
           type: string
           format: date-time
-          description: Date and time when the inventory item was first created
+          description: Date and time when the inventory item was first created.
         LastUpdatedAt:
           type: string
           format: date-time
-          description: Date and time when the inventory item was last updated
+          description: Date and time when the inventory item was last updated.
+        Workspace:
+          type: string
+          description: |-
+            The workspace in which this resource lives in common the common inventory.  A resource can only live
+            in one workspace.
         Reporters:
           type: array
           readOnly: true
@@ -373,6 +387,14 @@ components:
                     Type:
                       type: string
                       enum: ["vault_url", "ssh_key_identifier"]
+    EdgeDevice:
+      allOf:
+        - $ref: "#/components/schemas/CommonAttributes"
+        - type: object
+    ConfigurationPolicy:
+      allOf:
+        - $ref: "#/components/schemas/CommonAttributes"
+        - type: object
 
     PagedResponseMetadata:
       properties:
