@@ -228,12 +228,13 @@ components:
       description: Attributes shared by all items in inventory
       required:
         - DisplayName
-      allOf:
-        - $ref: "#/components/schemas/ReporterData"
-          writeOnly: true
-          description: |-
-            This data is write only and unique to a reporter.
       properties:
+        ReporterData:
+          type: object
+          writeOnly: true
+          description: The write only reporter specific data
+          allOf:
+            - $ref: "#/components/schemas/ReporterData"
         Id:
           type: string
           readOnly: true
