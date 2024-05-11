@@ -22,12 +22,12 @@ paths:
             type: integer
             format: int32
       responses:
-        200:
+        "200":
           description: A paged array of heterogenous inventory resources. Only common attributes will be returned.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CommonAttributes"
+                $ref: "#/components/schemas/HeterogeneousResourceList"
   /api/inventory/v1.0/resources/{resourceId}:
     description: Base path for common inventory
     parameters:
@@ -44,7 +44,7 @@ paths:
       summary: Get single resource
       operationId: getSingleResource
       responses:
-        200:
+        "200":
           description: Return matching resource
           content:
             application/json:
@@ -55,7 +55,7 @@ paths:
       summary: Delete the resource matching the given ID
       operationId: deleteSingleResource
       responses:
-        200:
+        "200":
           description: Return matching resource
 
   /api/inventory/v1.0/k8sclusters:
@@ -72,7 +72,7 @@ paths:
             type: integer
             format: int32
       responses:
-        200:
+        "200":
           description: A paged list of kubernetes clusters registered in the current inventory.
           content:
             application/json:
@@ -105,8 +105,8 @@ paths:
       summary: Get single cluster
       operationId: getSingleCluster
       responses:
-        200:
-          description: Return matching resource
+        "200":
+          description: Return matching k8s cluster
           content:
             application/json:
               schema:
@@ -143,7 +143,7 @@ paths:
             type: integer
             format: int32
       responses:
-        200:
+        "200":
           description: A paged array linux host inventory resources
           content:
             application/json:
@@ -176,7 +176,11 @@ paths:
       parameters: []
       responses:
         "200":
-          description: OK
+          description: Return matching linux host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/linuxHost"
     delete:
       description: ""
       parameters: []
@@ -240,8 +244,9 @@ components:
           readOnly: true
           description: The identifier for this resource in inventory.
         ResourceType:
-          description: The type of the inventory resource
           type: string
+          readOnly: true
+          description: The type of the inventory resource
         Href:
           type: string
           format: uri
