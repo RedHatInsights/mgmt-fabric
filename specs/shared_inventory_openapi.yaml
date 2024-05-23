@@ -9,10 +9,10 @@ servers:
 
 paths:
   /api/inventory/v1.0/resources:
-    description: Base path for common inventory
+    description: Retrieve lists of heterogenous Resources
     get:
-      summary: List all resources
-      operationId: listAllResources
+      summary: List all Resources
+      operationId: listResources
       parameters:
         - name: limit
           in: query
@@ -21,48 +21,27 @@ paths:
           schema:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing on to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
-        "200":
-          description: A paged array of heterogenous inventory resources. Only common attributes will be returned.
+        '200':
+          description: A paged array of heterogenous inventory resources.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/HeterogeneousResourceList"
-  /api/inventory/v1.0/resources/{resourceId}:
-    description: Base path for common inventory
-    parameters:
-      - name: resourceId
-        in: path
-        schema:
-          type: string
-        required: true
-        description: |-
-          The resource ID assigned to the resource by the inventory.
-          A reporter alias may also be used as a resource ID using the format:
-          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
-    get:
-      summary: Get single resource
-      operationId: getSingleResource
-      responses:
-        "200":
-          description: Return matching resource
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CommonAttributes"
+                $ref: '#/components/schemas/HeterogeneousResourceList'
 
-    delete:
-      summary: Delete the resource matching the given ID
-      operationId: deleteSingleResource
-      responses:
-        "200":
-          description: Return matching resource
-
-  /api/inventory/v1.0/k8sclusters:
-    description: k8s cluster specific
+  /api/inventory/v1.0/resources/k8s-clusters:
+    description: Managed K8s Clusters
     get:
       summary: List all cluster resources
-      operationId: listAllClusters
+      operationId: listClusters
       parameters:
         - name: limit
           in: query
@@ -71,28 +50,37 @@ paths:
           schema:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing on to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
-        "200":
+        '200':
           description: A paged list of kubernetes clusters registered in the current inventory.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/k8sClusterList"
+                $ref: '#/components/schemas/K8sClusterList'
     post:
-      description: ""
+      summary: Create a new K8s Cluster
       requestBody:
-        description: "The cluster to register"
+        description: 'The K8s Cluster to register.'
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/k8sCluster"
+              $ref: '#/components/schemas/K8sCluster'
       responses:
-        "200":
+        '200':
           description: OK
-  /api/inventory/v1.0/k8sclusters/{resourceId}:
-    description: B
+
+  /api/inventory/v1.0/resources/k8s-clusters/{id}:
+    description: Manage the K8s Cluster
     parameters:
-      - name: resourceId
+      - name: id
         in: path
         schema:
           type: string
@@ -102,101 +90,236 @@ paths:
            A reporter alias may also be used as a resource ID using the format:
           "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
-      summary: Get single cluster
+      summary: Get a single K8s Cluster
       operationId: getSingleCluster
       responses:
-        "200":
+        '200':
           description: Return matching k8s cluster
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/k8sCluster"
+                $ref: '#/components/schemas/K8sCluster'
     delete:
-      description: ""
+      summary: Delete a single K8s Cluster
       responses:
-        "200":
+        '200':
           description: OK
-    patch:
-      description: ""
-      parameters: []
+    put:
+      summary: Update a single K8s Cluster
       requestBody:
-        description: "The "
+        description: ''
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/k8sCluster"
+              $ref: '#/components/schemas/K8sCluster'
       responses:
-        "200":
+        '200':
           description: OK
 
-  /api/inventory/v1.0/linux-hosts:
-    description: k8s cluster specific
-    get:
-      summary: List all linux resources
-      operationId: listAllLinuxHosts
-      parameters:
-        - name: limit
-          in: query
-          description: How many items to return at one time (max 100)
-          required: false
-          schema:
-            type: integer
-            format: int32
-      responses:
-        "200":
-          description: A paged array linux host inventory resources
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/linuxHostList"
-    post:
-      description: ""
-      requestBody:
-        description: "The host to register"
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/linuxHost"
-      responses:
-        "200":
-          description: OK
-  /api/inventory/v1.0/linux-hosts/{resourceId}:
+  /api/inventory/v1.0/resources/k8s-clusters/{id}/intermediate-policies:
+    description: Retrieve Intermediate Policies associated with the K8sCluster
     parameters:
-      - name: resourceId
+      - name: id
         in: path
         schema:
           type: string
         required: true
         description: |-
-          The resource ID assigned to the resource by the inventory
-          A reporter alias may also be used as a resource ID using the format:
-          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
+          The resource ID assigned to the resource by the inventory.
     get:
-      description: ""
-      parameters: []
+      summary: Get Intermediate Policies
+      operationId: listIntermediatePoliciesForCluster
       responses:
-        "200":
-          description: Return matching linux host
+        '200':
+          description: Return the Intermediate Policies associated with the K8sCluster
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/linuxHost"
-    delete:
-      description: ""
-      parameters: []
+                type: array
+                items:
+                  $ref: '#/components/schemas/IntermediatePolicy'
+
+  /api/inventory/v1.0/resources/root-policies:
+    description: Manage Root Policies
+    get:
+      summary: List Root Policies
+      operationId: listRootPolicies
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for coninuing on to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
-        "200":
-          description: OK
-    patch:
-      description: ""
+        '200':
+          description: Return matching root policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RootPolicy'
+    post:
+      description: Create a new Root Policy
+      operationId: createRootPolicy
       requestBody:
-        description: "The "
+        description: 'The Root Policy to store'
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/linuxHost"
+              $ref: '#/components/schemas/RootPolicy'
       responses:
-        "200":
+        '200':
+          description: OK
+
+  /api/inventory/v1.0/resources/root-policies/{id}:
+    description: Manage a Root Policy
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The root policy ID assigned to the resource by the inventory
+    get:
+      description: Get the Root Policy
+      operationId: getRootPolicy
+      responses:
+        '200':
+          description: Return a Root Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RootPolicy'
+    delete:
+      description: Delete the Root Policy
+      operationId: deleteRootPolicy
+      parameters: []
+      responses:
+        '200':
+          description: OK
+    put:
+      description: Update the Root Policy
+      operationId: updateRootPolicy
+      requestBody:
+        description: 'The Updated Root Policy'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RootPolicy'
+      responses:
+        '200':
+          description: OK
+
+  /api/inventory/v1.0/resources/root-policies/{id}/intermediate-policies:
+    description: Retrieve Intermediate Policies associated with a Root Policy
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The root policy ID assigned to the resource by the inventory
+    get:
+      description: Get the intermediate policies associated with the Root Policy
+      operationId: getIntermediatePolicyForRootPolicy
+      responses:
+        '200':
+          description: Return an Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicyList'
+
+  /api/inventory/v1.0/resources/intermediate-policies:
+    description: Manage Intermediate Policies
+    get:
+      summary: List Intermediate Policies
+      operationId: listIntermediatePolicies
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for coninuing on to the next page of results
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Return matching Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicy'
+    post:
+      description: Create a new Intermediate Policy
+      operationId: CreateIntermediatePolicy
+      requestBody:
+        description: 'The Intermedate Policy to store'
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntermediatePolicy'
+      responses:
+        '200':
+          description: OK
+
+  /api/inventory/v1.0/resources/intermediate-policies/{id}:
+    description: Manage an Intermediate Policy
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The root policy ID assigned to the resource by the inventory
+    get:
+      description: Get an Intermediate Policy
+      operationId: getIntermediatePolicy
+      responses:
+        '200':
+          description: Return an Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicy'
+    delete:
+      description: Delete the Intermediate Policy
+      operationId: deleteIntermediatePolicy
+      parameters: []
+      responses:
+        '200':
+          description: OK
+    put:
+      description: Update the Intermediate Policy
+      operationId: updateIntermediatePolicy
+      requestBody:
+        description: 'The '
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntermediatePolicy'
+      responses:
+        '200':
           description: OK
 
 components:
@@ -211,6 +334,7 @@ components:
           type: string
         value:
           type: string
+
     ReporterData:
       type: object
       properties:
@@ -223,28 +347,26 @@ components:
         ApiHref:
           type: string
           format: uri
-          description: "Reporter specific API  link to the resource."
+          description: 'Reporter specific API  link to the resource.'
         ResourceIdAlias:
           type: string
-          description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
-    CommonAttributes:
+          description: 'The ID assigned to this resource by the reporter, for example OCM cluster ID'
+
+    Resource:
       type: object
       description: Attributes shared by all items in inventory
       required:
         - DisplayName
+        - Data
+        - ReporterData
       properties:
-        ReporterData:
-          type: object
-          writeOnly: true
-          description: The write only reporter specific data
-          allOf:
-            - $ref: "#/components/schemas/ReporterData"
         Id:
           type: string
           readOnly: true
           description: The identifier for this resource in inventory.
         ResourceType:
           type: string
+          # read only because this can be inferred from the path
           readOnly: true
           description: The type of the inventory resource
         Href:
@@ -262,11 +384,24 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated.
+        # should Workspace be required?
         Workspace:
           type: string
           description: |-
             The workspace in which this resource lives in common the common inventory.  A resource can only live
             in one workspace.
+        Data:
+          oneOf:
+            - $ref: '#/components/schemas/LinuxHostDetail'
+            - $ref: '#/components/schemas/K8sClusterDetail'
+            - $ref: '#/components/schemas/RootPolicyDetail'
+            - $ref: '#/components/schemas/IntermediatePolicyDetail'
+        ReporterData:
+          type: object
+          writeOnly: true
+          description: Write only reporter specific data
+          allOf:
+            - $ref: '#/components/schemas/ReporterData'
         Reporters:
           type: array
           readOnly: true
@@ -282,19 +417,19 @@ components:
               ReporterInstanceId:
                 type: string
                 description: |-
-                  The identifier unique to the reporter instance. This is meant to uniquely
-                  identify reporters that can have multiple instances running, such as ACM.
-                  The instance ID is authenticated during resource registration/update.
+                  Identifies the reporter. This is meant to uniquely identify reporters that can have multiple
+                  instances running, such as ACM. The instance ID is authenticated during resource
+                  registration/update.
               CreatedAt:
                 type: string
                 format: date-time
-                description: The time when the is reporter record was created
+                description: The time when this reporter record was created
               LastUpdatedAt:
                 type: string
                 format: date-time
                 description: The time when this reporter record was updated
             allOf:
-              - $ref: "#/components/schemas/ReporterData"
+              - $ref: '#/components/schemas/ReporterData'
                 description: The resource data that was registered by this reporter instance
 
         Tags:
@@ -303,151 +438,217 @@ components:
             (scope and select) resources
           type: array
           items:
-            $ref: "#/components/schemas/ResourceTag"
-      discriminator:
-        propertyName: ResourceType
+            $ref: '#/components/schemas/ResourceTag'
 
-    k8sCluster:
+    K8sCluster:
       allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
+        - $ref: '#/components/schemas/Resource'
         - type: object
-          description: Definition of k8s cluster resource  type
-          required:
-            - ResourceType
+          description: Definition of k8s cluster resource type
           properties:
             ResourceType:
-              description: The type of the inventory resource
+              readOnly: true
               type: string
-              enum: [k8sCluster]
-            ExternalClusterId:
+              description: "K8sCluster resource type"
+              enum:
+                - [K8sCluster]
+            Data:
+              allOf:
+                - $ref: "#/components/schemas/K8sClusterDetail"
+
+    K8sClusterDetail:
+      type: object
+      description: Definition of k8s cluster resource  type
+      properties:
+        ExternalClusterId:
+          type: string
+          description: The OCP cluster ID
+        KubeVersion:
+          type: string
+          description: The version of kubernetes
+        KubeVendor:
+          type: string
+          description: The kubernetes vendor
+        VendorVersion:
+          type: string
+          description: The version of the productized kubernetes distribution
+        CloudProviderId:
+          description: The ID of the cloud provider where this cluster is installed
+          type: string
+          enum:
+            - Amazon
+            - GCP
+            - Azure
+        Nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/K8sNode'
+        ClusterAccess:
+          type: object
+          properties:
+            ApiServerUrl:
               type: string
-              description: The OCP cluster ID
-            CloudProviderId:
-              type: string
-              description: The ID of the cloud provider where this cluster is installed
-            ClusterAccess:
+              description: The URL to access the cluster API server
+            CredentialRef:
               type: object
+              description: |-
+                The URL to get access credentials for this resource. For example this could be a reference to OCM
+                (https://api.openshift.com/#/default/get_api_clusters_mgmt_v1_clusters__cluster_id__credentials)
+                or  ARO RP
+                https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RedHatOpenShift/openShiftClusters/{resourceName}/listAdminCredentials?api-version=2023-09-04
+                It is the responsibility of the user to configure appropriate authentication for calling these APIs.
               properties:
-                ApiServerUrl:
+                Reference:
                   type: string
-                  description: The URL to access the cluster API server
-                CredentialRef:
-                  type: object
-                  description: |-
-                    The URL to get access credentials for this resource. For example this could be a reference to OCM
-                    (https://api.openshift.com/#/default/get_api_clusters_mgmt_v1_clusters__cluster_id__credentials)
-                    or  ARO RP
-                    https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RedHatOpenShift/openShiftClusters/{resourceName}/listAdminCredentials?api-version=2023-09-04
-                    It is the responsibility of the user to configure appropriate authentication for calling these APIs.
-                  properties:
-                    Reference:
-                      type: string
-                      format: uri
-                    RefType:
-                      description: The type of this credential URL
-                      type: string
-                      enum:
-                        - OCM
-                        - ARO-RP
-                        - ACM
+                  format: uri
+                RefType:
+                  description: The type of this credential URL
+                  type: string
+                  enum:
+                    - OCM
+                    - ARO-RP
+                    - ACM
 
-    linuxHost:
+    K8sNode:
+      type: object
+      properties:
+        Name:
+          type: string
+          description: The name of the node according to k8s
+        CPU:
+          type: integer
+          format: int32
+          description: The number of CPUs on the node
+          minimum: 1
+        Memory:
+          type: integer
+          description: The number of bytes of memory on the node
+          format: int64
+          minimum: 1
+        Labels:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+
+    RootPolicy:
       allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
+        - $ref: '#/components/schemas/Resource'
         - type: object
-          description: Definition of a linux host resource type
-          required:
-            - ResourceType
+          description: Definition of Root Policy resource type
           properties:
             ResourceType:
-              description: The type of the inventory resource
+              readOnly: true
               type: string
-              enum: [linuxHost]
-            BiosUuid:
-              type: string
-              description: The BIOS id for this host
-            Fqdn:
-              type: string
-              description: The fully qualified domain name for this host
-            InsightsId:
-              type: string
-              description: The (optional) Insights ID for this host
-            ProviderId:
-              type: string
-              description: The ID of the environment running this hsot
-            ProviderType:
-              type: string
-              description: The type of environmet running this host
-            SatelliteId:
-              type: string
-              description: The (optional) Satellite ID of the Satellite server managing this host
-            SubscriptionManagerId:
-              type: string
-              description: The subscription manager identity assigned to this host.
-            HostAccess:
-              type: object
-              properties:
-                CredentialRef:
-                  type: object
-                  description: The credential hint/key to get access credentials for this resource.
-                  properties:
-                    Reference:
-                      type: string
-                    Type:
-                      type: string
-                      enum: ["vault_url", "ssh_key_identifier"]
-    EdgeDevice:
+              description: The Root Policy type
+              enum:
+                - [RootPolicy]
+            Data:
+              allOf:
+                - $ref: "#/components/schemas/RootPolicyDetail"
+
+    RootPolicyDetail:
+      type: object
+
+    IntermediatePolicy:
       allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
+        - $ref: '#/components/schemas/Resource'
         - type: object
-    ConfigurationPolicy:
-      allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
-        - type: object
+          description: Definition of Intermediate Policy resource type
+          properties:
+            ResourceType:
+              readOnly: true
+              type: string
+              description: The Intermediate Policy resource type
+              enum:
+                - [IntermediatePolicyDetail]
+            Data:
+              allOf:
+                - $ref: "#/components/schemas/IntermediatePolicyDetail"
+
+    IntermediatePolicyDetail:
+      type: object
+      properties:
+        RootPolicyId:
+          type: string
+        K8sClusterId:
+          type: string
+        Data:
+          type: object
 
     PagedResponseMetadata:
       properties:
-        page:
+        # cursor based pagination aligns with Global Hub today.  It forces traversal from the beginning of a
+        # collection; i.e. it's not possible to jump to a specific page.
+        continue:
           description:
             Index of the requested page, where one corresponds to the first
             page.
-          type: integer
-          format: int32
+          type: string
         size:
           description: Number of items contained in the returned page.
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
         total:
           description: Total number of items of the collection.
           type: integer
-          format: int32
+          format: int64
+          minimum: 0
+
     HeterogeneousResourceList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
               description: Retrieved list of mixed type inventory items.
               type: array
               items:
-                $ref: "#/components/schemas/CommonAttributes"
-    k8sClusterList:
+                $ref: '#/components/schemas/Resource'
+
+    K8sClusterList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
               description: Retrieved list of k8s resources.
               type: array
               items:
-                $ref: "#/components/schemas/k8sCluster"
-    linuxHostList:
+                $ref: '#/components/schemas/K8sCluster'
+
+    LinuxHostList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
               description: Retrieved list of Linux host resources.
               type: array
               items:
-                $ref: "#/components/schemas/linuxHost"
+                $ref: '#/components/schemas/LinuxHost'
+
+    RootPolicyList:
+      allOf:
+        - $ref: '#/components/schemas/PagedResponseMetadata'
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of Root Policies
+              type: array
+              items:
+                $ref: '#/components/schemas/RootPolicy'
+
+    IntermediatePolicyList:
+      allOf:
+        - $ref: '#/components/schemas/PagedResponseMetadata'
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of Intermediate Policies
+              type: array
+              items:
+                $ref: '#/components/schemas/IntermediatePolicy'
