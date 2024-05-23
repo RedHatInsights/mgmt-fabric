@@ -595,6 +595,7 @@ components:
           type: object
 
     PagedResponseMetadata:
+      type: object
       properties:
         # cursor based pagination aligns with Global Hub today.  It forces traversal from the beginning of a
         # collection; i.e. it's not possible to jump to a specific page.
