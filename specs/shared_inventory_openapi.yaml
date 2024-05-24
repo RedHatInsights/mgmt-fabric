@@ -2,18 +2,21 @@ openapi: 3.0.0
 info:
   title: Common Inventory API
   description: Common Inventory
-  version: 1.0.0
+  version: 0.0.1
 
 servers:
   - url: https://console.redhat.com
 
 paths:
   /api/inventory/v1.0/resources:
-    description: Retrieve lists of heterogenous Resources
+    description: Retrieve a heterogenous list of Resources
     get:
-      # what parameters do we allow for querying?  Presumably ResourceType and Tags.  We need a convention or an algebra.
-      summary: List Resources
+      summary: List heterogenous Resources
       operationId: listResources
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or
+      # an algebra for tag expressions.
+      #
+      # Specific endpoints exist for each resource type.
       parameters:
         - name: limit
           in: query
@@ -26,24 +29,49 @@ paths:
             maximum: 100
         - name: continue
           in: query
-          description: The token for continuing on to the next page of results
+          description: The token for continuing to the next page of results
           required: false
           schema:
             type: string
       responses:
-        '200':
-          description: A paged array of heterogenous inventory resources.
+        "200":
+          description: A paged array of heterogenous Resources.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/HeterogeneousResourceList'
+                $ref: "#/components/schemas/HeterogeneousResourceList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/k8s-clusters:
-    description: Managed K8s Clusters
+    description: Manage K8s Clusters
     get:
-      # what parameters do we allow for querying?  Presumably Tags.  We need a convention or an algebra.
       summary: List K8s Clusters
       operationId: listK8sClusters
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or an
+      # algebra for tag expressions.
       parameters:
         - name: limit
           in: query
@@ -56,32 +84,84 @@ paths:
             maximum: 100
         - name: continue
           in: query
-          description: The token for continuing on to the next page of results
+          description: The token for continuing to the next page of results
           required: false
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: A paged list of kubernetes clusters registered in the current inventory.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/K8sClusterList'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       summary: Create a K8s Cluster
       operationId: createK8sCluster
       requestBody:
-        description: 'The K8s Cluster to register.'
+        description: The K8s Cluster to create
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/K8sCluster'
+              $ref: "#/components/schemas/K8sCluster"
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/K8sCluster"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/k8s-clusters/{id}:
-    description: Manage the K8s Cluster
+    description: Manage a K8s Cluster
     parameters:
       - name: id
         in: path
@@ -93,37 +173,103 @@ paths:
            A reporter alias may also be used as a resource ID using the format:
           "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
-      summary: Get the K8s Cluster
+      summary: Get a K8s Cluster
       operationId: getK8sCluster
       responses:
-        '200':
+        "200":
           description: Return matching k8s cluster
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/K8sCluster'
+                $ref: "#/components/schemas/K8sCluster"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
-      # This could orphan an Intermediate Policy.  The controller for this model must ensure to casade the delete.
+      # XXX: This could orphan an Intermediate Policy.  The DB table configuration or the controller for this model must ensure deletes cascade.
       summary: Delete a K8s Cluster
       operationId: deleteK8sCluster
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     put:
-      summary: Update a single K8s Cluster
+      summary: Update a K8s Cluster
       operationId: updateK8sCluster
       requestBody:
-        description: ''
+        description: The K8s Cluster to store
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/K8sCluster'
+              $ref: "#/components/schemas/K8sCluster"
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/k8s-clusters/{id}/intermediate-policies:
-    description: Retrieve Intermediate Policies associated with the K8sCluster
+    description: Retrieve Intermediate Policies associated with a K8sCluster
     parameters:
       - name: id
         in: path
@@ -133,24 +279,63 @@ paths:
         description: |-
           The resource ID assigned to the resource by the inventory.
     get:
-      summary: Get the Intermediate Policies associated with the K8s Cluster
+      summary: Get the Intermediate Policies associated with a K8s Cluster
       operationId: listIntermediatePoliciesForCluster
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time (max 100)
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
-        '200':
-          description: Return the Intermediate Policies associated with the K8sCluster
+        "200":
+          description: Return the Intermediate Policies associated with a K8sCluster
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/IntermediatePolicy'
+                $ref: "#/components/schemas/IntermediatePolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/root-policies:
     description: Manage Root Policies
     get:
-      # what parameters do we allow for querying?  Presumably Tags.  We need a convention or an algebra.
       summary: List Root Policies
       operationId: listRootPolicies
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or an
+      # algebra for tag expressions.
       parameters:
         - name: limit
           in: query
@@ -168,24 +353,76 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Return matching root policy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RootPolicy'
+                $ref: "#/components/schemas/RootPolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       summary: Create a Root Policy
       operationId: createRootPolicy
       requestBody:
-        description: 'The Root Policy to store'
+        description: The Root Policy to store
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RootPolicy'
+              $ref: "#/components/schemas/RootPolicy"
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RootPolicy"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/root-policies/{id}:
     description: Manage a Root Policy
@@ -198,7 +435,7 @@ paths:
         description: |-
           The root policy ID assigned to the resource by the inventory
     get:
-      summary: Get the Root Policy
+      summary: Get a Root Policy
       operationId: getRootPolicy
       responses:
         '200':
@@ -208,25 +445,66 @@ paths:
               schema:
                 $ref: '#/components/schemas/RootPolicy'
     delete:
-      # This could orphan an Intermediate Policy.  The controller for this model must ensure to casade the delete.
-      summary: Delete the Root Policy
+      # XXX: This could orphan an Intermediate Policy.  The DB table configuration or the controller for this model must ensure deletes cascade.
+      summary: Delete a Root Policy
       operationId: deleteRootPolicy
-      parameters: []
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     put:
-      summary: Update the Root Policy
+      summary: Update a Root Policy
       operationId: updateRootPolicy
       requestBody:
-        description: 'The Updated Root Policy'
+        description: The Root Policy to update
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/RootPolicy'
+              $ref: "#/components/schemas/RootPolicy"
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/root-policies/{id}/intermediate-policies:
     description: Retrieve Intermediate Policies associated with a Root Policy
@@ -239,20 +517,44 @@ paths:
         description: |-
           The root policy ID assigned to the resource by the inventory
     get:
-      summary: Get the Intermediate Policies associated with the Root Policy
+      summary: Get the Intermediate Policies associated with a Root Policy
       operationId: getIntermediatePoliciesForRootPolicy
       responses:
-        '200':
+        "200":
           description: Return an Intermediate Policy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntermediatePolicyList'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/intermediate-policies:
     description: Manage Intermediate Policies
     get:
-      # Intermediate Policies are a non-public detail.  Requires no complicated filtering.
+      # XXX: Intermediate Policies are a non-public detail.  Requires no complicated filtering.
       summary: List Intermediate Policies
       operationId: listIntermediatePolicies
       parameters:
@@ -272,24 +574,76 @@ paths:
           schema:
             type: string
       responses:
-        '200':
+        "200":
           description: Return matching Intermediate Policy
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/IntermediatePolicy'
+                $ref: "#/components/schemas/IntermediatePolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
       summary: Create an Intermediate Policy
       operationId: createIntermediatePolicy
       requestBody:
-        description: 'The Intermedate Policy to store'
+        description: The Intermedate Policy to store
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/IntermediatePolicy'
+              $ref: "#/components/schemas/IntermediatePolicy"
       responses:
-        '200':
-          description: OK
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicy'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /api/inventory/v1.0/resources/intermediate-policies/{id}:
     description: Manage an Intermediate Policy
@@ -302,34 +656,99 @@ paths:
         description: |-
           The root policy ID assigned to the resource by the inventory
     get:
-      summary: Get the Intermediate Policy
+      summary: Get an Intermediate Policy
       operationId: getIntermediatePolicy
       responses:
-        '200':
+        "200":
           description: Return an Intermediate Policy
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/IntermediatePolicy'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
-      summary: Delete the Intermediate Policy
+      summary: Delete an Intermediate Policy
       operationId: deleteIntermediatePolicy
-      parameters: []
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     put:
-      summary: Update the Intermediate Policy
+      summary: Update an Intermediate Policy
       operationId: updateIntermediatePolicy
       requestBody:
-        description: 'The '
+        description: The Intermediate Policy to update
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/IntermediatePolicy'
       responses:
-        '200':
-          description: OK
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -376,7 +795,8 @@ components:
           type: string
           # read only because this can be inferred from the path
           readOnly: true
-          description: The type of the inventory resource
+          description: |-
+            The type of the Resource.  This should match the segment of the URL path that is used to manage individual resources of the type; e.g., "k8s-cluster"
         Href:
           type: string
           format: uri
@@ -392,7 +812,7 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated.
-        # should Workspace be required?
+        # TODO: should Workspace be required?
         Workspace:
           type: string
           description: |-
@@ -597,7 +1017,7 @@ components:
     PagedResponseMetadata:
       type: object
       properties:
-        # cursor based pagination aligns with Global Hub today.  It forces traversal from the beginning of a
+        # Cursor based pagination aligns with Global Hub today.  It forces traversal from the beginning of a
         # collection; i.e. it's not possible to jump to a specific page.
         continue:
           description:
@@ -659,3 +1079,29 @@ components:
               type: array
               items:
                 $ref: '#/components/schemas/IntermediatePolicy'
+
+    Error:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        # https://datatracker.ietf.org/doc/html/rfc7807#section-3.1
+        type:
+          type: string
+          description: A URI reference [RFC3986] that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          description: The HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.
+          format: int32
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.
