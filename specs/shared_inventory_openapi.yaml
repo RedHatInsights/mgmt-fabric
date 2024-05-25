@@ -2,17 +2,21 @@ openapi: 3.0.0
 info:
   title: Common Inventory API
   description: Common Inventory
-  version: 1.0.0
+  version: 0.0.1
 
 servers:
   - url: https://console.redhat.com
 
 paths:
   /api/inventory/v1.0/resources:
-    description: Base path for common inventory
+    description: Retrieve a heterogenous list of Resources
     get:
-      summary: List all resources
-      operationId: listAllResources
+      summary: List heterogenous Resources
+      operationId: listResources
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or
+      # an algebra for tag expressions.
+      #
+      # Specific endpoints exist for each resource type.
       parameters:
         - name: limit
           in: query
@@ -21,48 +25,53 @@ paths:
           schema:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
         "200":
-          description: A paged array of heterogenous inventory resources. Only common attributes will be returned.
+          description: A paged array of heterogenous Resources.
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/HeterogeneousResourceList"
-  /api/inventory/v1.0/resources/{resourceId}:
-    description: Base path for common inventory
-    parameters:
-      - name: resourceId
-        in: path
-        schema:
-          type: string
-        required: true
-        description: |-
-          The resource ID assigned to the resource by the inventory.
-          A reporter alias may also be used as a resource ID using the format:
-          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
-    get:
-      summary: Get single resource
-      operationId: getSingleResource
-      responses:
-        "200":
-          description: Return matching resource
+        "400":
+          description: Bad Request
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/CommonAttributes"
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
-    delete:
-      summary: Delete the resource matching the given ID
-      operationId: deleteSingleResource
-      responses:
-        "200":
-          description: Return matching resource
-
-  /api/inventory/v1.0/k8sclusters:
-    description: k8s cluster specific
+  /api/inventory/v1.0/resources/k8s-clusters:
+    description: Manage K8s Clusters
     get:
-      summary: List all cluster resources
-      operationId: listAllClusters
+      summary: List K8s Clusters
+      operationId: listK8sClusters
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or an
+      # algebra for tag expressions.
       parameters:
         - name: limit
           in: query
@@ -71,28 +80,90 @@ paths:
           schema:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
         "200":
           description: A paged list of kubernetes clusters registered in the current inventory.
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/k8sClusterList"
+                $ref: '#/components/schemas/K8sClusterList'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
-      description: ""
+      summary: Create a K8s Cluster
+      operationId: createK8sCluster
       requestBody:
-        description: "The cluster to register"
+        description: The K8s Cluster to create
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/k8sCluster"
+              $ref: "#/components/schemas/K8sCluster"
       responses:
         "200":
-          description: OK
-  /api/inventory/v1.0/k8sclusters/{resourceId}:
-    description: B
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/K8sCluster"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/k8s-clusters/{id}:
+    description: Manage a K8s Cluster
     parameters:
-      - name: resourceId
+      - name: id
         in: path
         schema:
           type: string
@@ -102,38 +173,132 @@ paths:
            A reporter alias may also be used as a resource ID using the format:
           "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
     get:
-      summary: Get single cluster
-      operationId: getSingleCluster
+      summary: Get a K8s Cluster
+      operationId: getK8sCluster
       responses:
         "200":
           description: Return matching k8s cluster
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/k8sCluster"
+                $ref: "#/components/schemas/K8sCluster"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
-      description: ""
+      # XXX: This could orphan an Intermediate Policy.  The DB table configuration or the controller for this model must ensure deletes cascade.
+      summary: Delete a K8s Cluster
+      operationId: deleteK8sCluster
       responses:
-        "200":
-          description: OK
-    patch:
-      description: ""
-      parameters: []
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a K8s Cluster
+      operationId: updateK8sCluster
       requestBody:
-        description: "The "
+        description: The K8s Cluster to store
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/k8sCluster"
+              $ref: "#/components/schemas/K8sCluster"
       responses:
-        "200":
-          description: OK
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
-  /api/inventory/v1.0/linux-hosts:
-    description: k8s cluster specific
+  /api/inventory/v1.0/resources/k8s-clusters/{id}/intermediate-policies:
+    description: Retrieve Intermediate Policies associated with a K8sCluster
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The resource ID assigned to the resource by the inventory.
     get:
-      summary: List all linux resources
-      operationId: listAllLinuxHosts
+      summary: Get the Intermediate Policies associated with a K8s Cluster
+      operationId: listIntermediatePoliciesForCluster
       parameters:
         - name: limit
           in: query
@@ -142,62 +307,532 @@ paths:
           schema:
             type: integer
             format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for continuing to the next page of results
+          required: false
+          schema:
+            type: string
       responses:
         "200":
-          description: A paged array linux host inventory resources
+          description: Return the Intermediate Policies associated with a K8sCluster
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/linuxHostList"
+                $ref: "#/components/schemas/IntermediatePolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/root-policies:
+    description: Manage Root Policies
+    get:
+      summary: List Root Policies
+      operationId: listRootPolicies
+      # TODO: What parameters do we allow for querying?  Presumably Tags.  We need syntax and a convention or an
+      # algebra for tag expressions.
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for coninuing on to the next page of results
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Return matching root policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RootPolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     post:
-      description: ""
+      summary: Create a Root Policy
+      operationId: createRootPolicy
       requestBody:
-        description: "The host to register"
+        description: The Root Policy to store
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/linuxHost"
+              $ref: "#/components/schemas/RootPolicy"
       responses:
         "200":
-          description: OK
-  /api/inventory/v1.0/linux-hosts/{resourceId}:
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RootPolicy"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/root-policies/{id}:
+    description: Manage a Root Policy
     parameters:
-      - name: resourceId
+      - name: id
         in: path
         schema:
           type: string
         required: true
         description: |-
-          The resource ID assigned to the resource by the inventory
-          A reporter alias may also be used as a resource ID using the format:
-          "hcrn:<reporter.Type>:<reporter.InstanceId>::<reporter.ResourceIdAlias>""
+          The root policy ID assigned to the resource by the inventory
     get:
-      description: ""
-      parameters: []
+      summary: Get a Root Policy
+      operationId: getRootPolicy
       responses:
         "200":
-          description: Return matching linux host
+          description: Return a Root Policy
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/linuxHost"
+                $ref: '#/components/schemas/RootPolicy'
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
     delete:
-      description: ""
-      parameters: []
+      # XXX: This could orphan an Intermediate Policy.  The DB table configuration or the controller for this model must ensure deletes cascade.
+      summary: Delete a Root Policy
+      operationId: deleteRootPolicy
       responses:
-        "200":
-          description: OK
-    patch:
-      description: ""
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update a Root Policy
+      operationId: updateRootPolicy
       requestBody:
-        description: "The "
+        description: The Root Policy to update
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/linuxHost"
+              $ref: "#/components/schemas/RootPolicy"
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/root-policies/{id}/intermediate-policies:
+    description: Retrieve Intermediate Policies associated with a Root Policy
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The root policy ID assigned to the resource by the inventory
+    get:
+      summary: Get the Intermediate Policies associated with a Root Policy
+      operationId: getIntermediatePoliciesForRootPolicy
       responses:
         "200":
-          description: OK
+          description: Return an Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicyList'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/intermediate-policies:
+    description: Manage Intermediate Policies
+    get:
+      # XXX: Intermediate Policies are a non-public detail.  Requires no complicated filtering.
+      summary: List Intermediate Policies
+      operationId: listIntermediatePolicies
+      parameters:
+        - name: limit
+          in: query
+          description: How many items to return at one time
+          required: false
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+        - name: continue
+          in: query
+          description: The token for coninuing on to the next page of results
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Return matching Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IntermediatePolicyList"
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      summary: Create an Intermediate Policy
+      operationId: createIntermediatePolicy
+      requestBody:
+        description: The Intermedate Policy to store
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/IntermediatePolicy"
+      responses:
+        "200":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicy'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /api/inventory/v1.0/resources/intermediate-policies/{id}:
+    description: Manage an Intermediate Policy
+    parameters:
+      - name: id
+        in: path
+        schema:
+          type: string
+        required: true
+        description: |-
+          The root policy ID assigned to the resource by the inventory
+    get:
+      summary: Get an Intermediate Policy
+      operationId: getIntermediatePolicy
+      responses:
+        "200":
+          description: Return an Intermediate Policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IntermediatePolicy'
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    delete:
+      summary: Delete an Intermediate Policy
+      operationId: deleteIntermediatePolicy
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    put:
+      summary: Update an Intermediate Policy
+      operationId: updateIntermediatePolicy
+      requestBody:
+        description: The Intermediate Policy to update
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IntermediatePolicy'
+      responses:
+        "204":
+          description: No content
+        "400":
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Unauthorized (really unauthenticated)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Forbidden (really unauthorized)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
 components:
   schemas:
@@ -211,6 +846,7 @@ components:
           type: string
         value:
           type: string
+
     ReporterData:
       type: object
       properties:
@@ -223,30 +859,28 @@ components:
         ApiHref:
           type: string
           format: uri
-          description: "Reporter specific API  link to the resource."
+          description: 'Reporter specific API  link to the resource.'
         ResourceIdAlias:
           type: string
-          description: "The ID assigned to this resource by the reporter, for example OCM cluster ID"
+          description: 'The ID assigned to this resource by the reporter, for example OCM cluster ID'
+
     CommonAttributes:
       type: object
       description: Attributes shared by all items in inventory
       required:
         - DisplayName
+        - ReporterData
       properties:
-        ReporterData:
-          type: object
-          writeOnly: true
-          description: The write only reporter specific data
-          allOf:
-            - $ref: "#/components/schemas/ReporterData"
         Id:
           type: string
           readOnly: true
           description: The identifier for this resource in inventory.
         ResourceType:
           type: string
+          # read only because this can be inferred from the path
           readOnly: true
-          description: The type of the inventory resource
+          description: |-
+            The type of the Resource.  This should match the segment of the URL path that is used to manage individual resources of the type; e.g., "k8s-cluster"
         Href:
           type: string
           format: uri
@@ -262,11 +896,18 @@ components:
           type: string
           format: date-time
           description: Date and time when the inventory item was last updated.
+        # TODO: should Workspace be required?
         Workspace:
           type: string
           description: |-
             The workspace in which this resource lives in common the common inventory.  A resource can only live
             in one workspace.
+        ReporterData:
+          type: object
+          writeOnly: true
+          description: Write only reporter specific data
+          allOf:
+            - $ref: '#/components/schemas/ReporterData'
         Reporters:
           type: array
           readOnly: true
@@ -282,19 +923,19 @@ components:
               ReporterInstanceId:
                 type: string
                 description: |-
-                  The identifier unique to the reporter instance. This is meant to uniquely
-                  identify reporters that can have multiple instances running, such as ACM.
-                  The instance ID is authenticated during resource registration/update.
+                  Identifies the reporter. This is meant to uniquely identify reporters that can have multiple
+                  instances running, such as ACM. The instance ID is authenticated during resource
+                  registration/update.
               CreatedAt:
                 type: string
                 format: date-time
-                description: The time when the is reporter record was created
+                description: The time when this reporter record was created
               LastUpdatedAt:
                 type: string
                 format: date-time
                 description: The time when this reporter record was updated
             allOf:
-              - $ref: "#/components/schemas/ReporterData"
+              - $ref: '#/components/schemas/ReporterData'
                 description: The resource data that was registered by this reporter instance
 
         Tags:
@@ -303,151 +944,248 @@ components:
             (scope and select) resources
           type: array
           items:
-            $ref: "#/components/schemas/ResourceTag"
-      discriminator:
-        propertyName: ResourceType
+            $ref: '#/components/schemas/ResourceTag'
 
-    k8sCluster:
+    Resource:
       allOf:
         - $ref: "#/components/schemas/CommonAttributes"
         - type: object
-          description: Definition of k8s cluster resource  type
+          description: Attributes shared by all items in inventory
           required:
-            - ResourceType
+            - DisplayName
+            - Data
+            - ReporterData
+          properties:
+            Data:
+              oneOf:
+                - $ref: '#/components/schemas/K8sClusterDetail'
+                - $ref: '#/components/schemas/RootPolicyDetail'
+                - $ref: '#/components/schemas/IntermediatePolicyDetail'
+    
+    K8sCluster:
+      allOf:
+        - $ref: '#/components/schemas/CommonAttributes'
+        - type: object
+          description: Definition of k8s cluster resource type
           properties:
             ResourceType:
-              description: The type of the inventory resource
+              readOnly: true
               type: string
-              enum: [k8sCluster]
-            ExternalClusterId:
+              description: "K8sCluster resource type"
+              enum:
+                - K8sCluster
+            Data:
+              allOf:
+                - $ref: "#/components/schemas/K8sClusterDetail"
+
+    K8sClusterDetail:
+      type: object
+      description: Definition of k8s cluster resource type details
+      properties:
+        ExternalClusterId:
+          type: string
+          description: The OCP cluster ID
+        KubeVersion:
+          type: string
+          description: The version of kubernetes
+        KubeVendor:
+          type: string
+          description: The kubernetes vendor
+        VendorVersion:
+          type: string
+          description: The version of the productized kubernetes distribution
+        CloudProviderId:
+          description: The ID of the cloud provider where this cluster is installed
+          type: string
+          enum:
+            - Amazon
+            - GCP
+            - Azure
+        Nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/K8sNode'
+        ClusterAccess:
+          type: object
+          properties:
+            ApiServerUrl:
               type: string
-              description: The OCP cluster ID
-            CloudProviderId:
-              type: string
-              description: The ID of the cloud provider where this cluster is installed
-            ClusterAccess:
+              description: The URL to access the cluster API server
+            CredentialRef:
               type: object
+              description: |-
+                The URL to get access credentials for this resource. For example this could be a reference to OCM
+                (https://api.openshift.com/#/default/get_api_clusters_mgmt_v1_clusters__cluster_id__credentials)
+                or  ARO RP
+                https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RedHatOpenShift/openShiftClusters/{resourceName}/listAdminCredentials?api-version=2023-09-04
+                It is the responsibility of the user to configure appropriate authentication for calling these APIs.
               properties:
-                ApiServerUrl:
+                Reference:
                   type: string
-                  description: The URL to access the cluster API server
-                CredentialRef:
-                  type: object
-                  description: |-
-                    The URL to get access credentials for this resource. For example this could be a reference to OCM
-                    (https://api.openshift.com/#/default/get_api_clusters_mgmt_v1_clusters__cluster_id__credentials)
-                    or  ARO RP
-                    https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.RedHatOpenShift/openShiftClusters/{resourceName}/listAdminCredentials?api-version=2023-09-04
-                    It is the responsibility of the user to configure appropriate authentication for calling these APIs.
-                  properties:
-                    Reference:
-                      type: string
-                      format: uri
-                    RefType:
-                      description: The type of this credential URL
-                      type: string
-                      enum:
-                        - OCM
-                        - ARO-RP
-                        - ACM
+                  format: uri
+                RefType:
+                  description: The type of this credential URL
+                  type: string
+                  enum:
+                    - OCM
+                    - ARO-RP
+                    - ACM
 
-    linuxHost:
+    K8sNode:
+      type: object
+      properties:
+        Name:
+          type: string
+          description: The name of the node according to k8s
+        CPU:
+          type: integer
+          format: int32
+          description: The number of CPUs on the node
+          minimum: 1
+        Memory:
+          type: integer
+          description: The number of bytes of memory on the node
+          format: int64
+          minimum: 1
+        Labels:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+
+    RootPolicy:
       allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
+        - $ref: '#/components/schemas/CommonAttributes'
         - type: object
-          description: Definition of a linux host resource type
-          required:
-            - ResourceType
+          description: Definition of Root Policy resource type
           properties:
             ResourceType:
-              description: The type of the inventory resource
+              readOnly: true
               type: string
-              enum: [linuxHost]
-            BiosUuid:
-              type: string
-              description: The BIOS id for this host
-            Fqdn:
-              type: string
-              description: The fully qualified domain name for this host
-            InsightsId:
-              type: string
-              description: The (optional) Insights ID for this host
-            ProviderId:
-              type: string
-              description: The ID of the environment running this hsot
-            ProviderType:
-              type: string
-              description: The type of environmet running this host
-            SatelliteId:
-              type: string
-              description: The (optional) Satellite ID of the Satellite server managing this host
-            SubscriptionManagerId:
-              type: string
-              description: The subscription manager identity assigned to this host.
-            HostAccess:
-              type: object
-              properties:
-                CredentialRef:
-                  type: object
-                  description: The credential hint/key to get access credentials for this resource.
-                  properties:
-                    Reference:
-                      type: string
-                    Type:
-                      type: string
-                      enum: ["vault_url", "ssh_key_identifier"]
-    EdgeDevice:
+              description: The Root Policy type
+              enum:
+                - RootPolicy
+            Data:
+              allOf:
+                - $ref: "#/components/schemas/RootPolicyDetail"
+
+    RootPolicyDetail:
+      type: object
+
+    IntermediatePolicy:
       allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
+        - $ref: '#/components/schemas/CommonAttributes'
         - type: object
-    ConfigurationPolicy:
-      allOf:
-        - $ref: "#/components/schemas/CommonAttributes"
-        - type: object
+          description: Definition of Intermediate Policy resource type
+          properties:
+            ResourceType:
+              readOnly: true
+              type: string
+              description: The Intermediate Policy resource type
+              enum:
+                - IntermediatePolicyDetail
+            Data:
+               $ref: "#/components/schemas/IntermediatePolicyDetail"
+
+    IntermediatePolicyDetail:
+      type: object
+      properties:
+        RootPolicyId:
+          type: string
+        K8sClusterId:
+          type: string
+        Data:
+          type: object
 
     PagedResponseMetadata:
+      type: object
       properties:
-        page:
+        # Cursor based pagination aligns with Global Hub today.  It forces traversal from the beginning of a
+        # collection; i.e. it's not possible to jump to a specific page.
+        continue:
           description:
             Index of the requested page, where one corresponds to the first
             page.
-          type: integer
-          format: int32
+          type: string
         size:
           description: Number of items contained in the returned page.
           type: integer
           format: int32
+          minimum: 1
+          maximum: 100
         total:
           description: Total number of items of the collection.
           type: integer
-          format: int32
+          format: int64
+          minimum: 0
+
     HeterogeneousResourceList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
               description: Retrieved list of mixed type inventory items.
               type: array
               items:
-                $ref: "#/components/schemas/CommonAttributes"
-    k8sClusterList:
+                $ref: '#/components/schemas/Resource'
+
+    K8sClusterList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
               description: Retrieved list of k8s resources.
               type: array
               items:
-                $ref: "#/components/schemas/k8sCluster"
-    linuxHostList:
+                $ref: '#/components/schemas/K8sCluster'
+
+    RootPolicyList:
       allOf:
-        - $ref: "#/components/schemas/PagedResponseMetadata"
+        - $ref: '#/components/schemas/PagedResponseMetadata'
         - type: object
           properties:
             items:
-              description: Retrieved list of Linux host resources.
+              description: Retrieved list of Root Policies
               type: array
               items:
-                $ref: "#/components/schemas/linuxHost"
+                $ref: '#/components/schemas/RootPolicy'
+
+    IntermediatePolicyList:
+      allOf:
+        - $ref: '#/components/schemas/PagedResponseMetadata'
+        - type: object
+          properties:
+            items:
+              description: Retrieved list of Intermediate Policies
+              type: array
+              items:
+                $ref: '#/components/schemas/IntermediatePolicy'
+
+    Error:
+      type: object
+      required:
+        - status
+        - type
+      properties:
+        # https://datatracker.ietf.org/doc/html/rfc7807#section-3.1
+        type:
+          type: string
+          description: A URI reference [RFC3986] that identifies the problem type.
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type.
+        status:
+          type: integer
+          description: The HTTP status code ([RFC7231], Section 6) generated by the origin server for this occurrence of the problem.
+          format: int32
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence of the problem.
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence of the problem.  It may or may not yield further information if dereferenced.
